@@ -2,3 +2,6 @@ __pycache__
 *.pyc
 *.pyo
 .tox
+dist/
+build/
+lxml_html_clean.egg-info/
