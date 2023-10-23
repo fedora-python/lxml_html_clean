@@ -2,10 +2,9 @@ import base64
 import gzip
 import io
 import unittest
-from lxml.tests.common_imports import make_doctest
 
 import lxml.html
-from lxml.html.clean import Cleaner, clean_html
+from lxml_html_clean import Cleaner, clean_html
 
 
 class CleanerTest(unittest.TestCase):
@@ -303,11 +302,3 @@ class CleanerTest(unittest.TestCase):
         expected = '<div></div>'
         cleaner = Cleaner(frames=False, host_whitelist=["example.com"])
         self.assertEqual(expected, cleaner.clean_html(html))
-
-
-def test_suite():
-    suite = unittest.TestSuite()
-    suite.addTests([make_doctest('test_clean.txt')])
-    suite.addTests([make_doctest('test_clean_embed.txt')])
-    suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(CleanerTest))
-    return suite
