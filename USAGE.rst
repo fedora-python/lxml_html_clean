@@ -1,11 +1,11 @@
 Cleaning up HTML
 ================
 
-The module ``lxml.html.clean`` provides a ``Cleaner`` class for cleaning up
+The module ``lxml_html_clean`` provides a ``Cleaner`` class for cleaning up
 HTML pages.  It supports removing embedded or script content, special tags,
 CSS style annotations and much more.
 
-Note: the HTML Cleaner in ``lxml.html.clean`` is **not** considered
+Note: the HTML Cleaner in ``lxml_html_clean`` is **not** considered
 appropriate **for security sensitive environments**.
 See e.g. `bleach <https://pypi.org/project/bleach/>`_ for an alternative.
 
@@ -47,7 +47,7 @@ To remove the all superfluous content from this unparsed document, use the
 
 .. sourcecode:: pycon
 
-    >>> from lxml.html.clean import clean_html
+    >>> from lxml_html_clean import clean_html
     >>> print clean_html(html)
     <div><style>/* deleted */</style><body>
        
@@ -67,7 +67,7 @@ which content is removed:
 
 .. sourcecode:: pycon
 
-    >>> from lxml.html.clean import Cleaner
+    >>> from lxml_html_clean import Cleaner
 
     >>> cleaner = Cleaner(page_structure=False, links=False)
     >>> print cleaner.clean_html(html)
@@ -121,7 +121,7 @@ cleaned.
 autolink
 --------
 
-In addition to cleaning up malicious HTML, ``lxml.html.clean``
+In addition to cleaning up malicious HTML, ``lxml_html_clean``
 contains functions to do other things to your HTML.  This includes
 autolinking::
 
