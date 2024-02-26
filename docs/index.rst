@@ -30,6 +30,13 @@ API
 
    lxml_html_clean
 
+Changelog
+=========
+
+.. toctree::
+   :maxdepth: 2
+
+   changes
 
 Indices and tables
 ==================
