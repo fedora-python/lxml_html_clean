@@ -7,11 +7,7 @@ This project was initially a part of [lxml](https://github.com/lxml/lxml). Becau
 ## Installation
 
 You can install this project directly via `pip install lxml_html_clean` or soon as an extra of lxml
-itself via `pip install lxml[html_clean]`. Both ways installs this project together with lxml itself.
-
-## Usage
-
-[USAGE.rst](USAGE.rst) contains a part of the lxml documentation related to HTML cleaning.
+via `pip install lxml[html_clean]`. Both ways installs this project together with lxml itself.
 
 ## License
 
