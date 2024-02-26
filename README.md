@@ -9,6 +9,10 @@ This project was initially a part of [lxml](https://github.com/lxml/lxml). Becau
 You can install this project directly via `pip install lxml_html_clean` or soon as an extra of lxml
 via `pip install lxml[html_clean]`. Both ways installs this project together with lxml itself.
 
+## Documentation
+
+[https://lxml-html-clean.readthedocs.io/](https://lxml-html-clean.readthedocs.io/)
+
 ## License
 
 BSD-3-Clause
