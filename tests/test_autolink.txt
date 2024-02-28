@@ -1,7 +1,7 @@
 This tests autolink::
 
     >>> from lxml.html import usedoctest
-    >>> from lxml.html.clean import autolink_html
+    >>> from lxml_html_clean import autolink_html
     >>> print(autolink_html('''
     ... <div>Link here: http://test.com/foo.html.</div>
     ... '''))
@@ -56,7 +56,7 @@ Some cases that won't be caught (on purpose)::
 There's also a word wrapping function, that should probably be run
 after autolink::
 
-    >>> from lxml.html.clean import word_break_html
+    >>> from lxml_html_clean import word_break_html
     >>> def pascii(s):
     ...     print(s.encode('ascii', 'xmlcharrefreplace').decode('ascii'))
     >>> pascii(word_break_html( u'''
