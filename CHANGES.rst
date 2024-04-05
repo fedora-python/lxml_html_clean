@@ -7,6 +7,16 @@ Unreleased
 ==========
 
 
+0.1.1 (2024-04-05)
+==================
+
+Bugs fixed
+----------
+
+* Regular expresion for image data URLs now supports multiple data
+  URLs on a single line.
+
+
 0.1.0 (2024-02-26)
 ==================
 
