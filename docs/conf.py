@@ -11,8 +11,8 @@ sys.path.insert(0, "..")
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'lxml_html_clean'
-copyright = '2024, Lumír Balhar'
-author = 'Lumír Balhar'
+copyright = '2020, lxml dev team'
+author = 'lxml dev team'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
