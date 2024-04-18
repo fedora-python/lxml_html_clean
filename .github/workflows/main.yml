@@ -30,6 +30,7 @@ jobs:
           - py310
           - py311
           - py312
+          - mypy
 
     # Use GitHub's Linux Docker host
     runs-on: ubuntu-latest
