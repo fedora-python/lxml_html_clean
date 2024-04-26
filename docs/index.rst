@@ -11,7 +11,7 @@ security-sensitive environments. Therefore we decided to extract the problematic
 Installation
 ------------
 
-You can install this project directly via ``pip install lxml_html_clean``` or soon as an extra of lxml
+You can install this project directly via ``pip install lxml_html_clean`` or soon as an extra of lxml
 via ``pip install lxml[html_clean]``. Both ways installs this project together with lxml itself.
 
 Usage
