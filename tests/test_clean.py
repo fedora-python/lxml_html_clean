@@ -327,3 +327,9 @@ class CleanerTest(unittest.TestCase):
         expected = '<div></div>'
         cleaner = Cleaner(frames=False, host_whitelist=["example.com"])
         self.assertEqual(expected, cleaner.clean_html(html))
+
+    def test_ascii_control_chars_removed(self):
+        html = """<a href="java\x1bscript:alert()">Link</a>"""
+        expected = """<a href="">Link</a>"""
+        cleaner = Cleaner()
+        self.assertEqual(expected, cleaner.clean_html(html))
