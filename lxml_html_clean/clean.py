@@ -12,7 +12,7 @@ from urllib.parse import urlsplit, unquote_plus
 
 from lxml import etree
 from lxml.html import defs
-from lxml.html import fromstring, XHTML_NAMESPACE
+from lxml.html import fromstring as lxml_fromstring, XHTML_NAMESPACE
 from lxml.html import xhtml_to_html, _transform_result
 
 
@@ -82,6 +82,21 @@ _find_external_links = etree.XPath(
     ("descendant-or-self::a  [normalize-space(@href) and substring(normalize-space(@href),1,1) != '#'] |"
      "descendant-or-self::x:a[normalize-space(@href) and substring(normalize-space(@href),1,1) != '#']"),
     namespaces={'x':XHTML_NAMESPACE})
+
+# Regex to remove all ASCII control characters (00-1F,7F) except:
+# - 09 - Horizontal tab
+# - 0A - Line Feed
+# - 0B - Vertical tab
+# - 0D - Carriage Return
+_ascii_control_characters = re.compile(r"[\x00-\x08\x0C\x0E-\x1F\x7F]")
+
+
+def fromstring(string):
+    """
+    Enhanced fromstring function that removes ASCII control chars
+    before passing the input to the original lxml.html.fromstring.
+    """
+    return lxml_fromstring(_ascii_control_characters.sub("", string))
 
 
 class Cleaner:
