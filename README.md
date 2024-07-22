@@ -9,6 +9,12 @@ This project was initially a part of [lxml](https://github.com/lxml/lxml). Becau
 You can install this project directly via `pip install lxml_html_clean` or soon as an extra of lxml
 via `pip install lxml[html_clean]`. Both ways installs this project together with lxml itself.
 
+## Security
+
+For discussions regarding security-related issues or any sensitive reports, please contact us privately.
+You can reach out to lbalhar(at)redhat.com or frenzy.madness(at)gmail.com to ensure your concerns
+are addressed confidentially and securely.
+
 ## Documentation
 
 [https://lxml-html-clean.readthedocs.io/](https://lxml-html-clean.readthedocs.io/)
