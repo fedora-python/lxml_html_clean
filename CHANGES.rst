@@ -6,6 +6,11 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+Features added
+--------------
+
+* ASCII control characters (except HT, VT, CR and LF) are now removed
+  from string inputs before they're parsed by lxml/libxml2.
 
 0.1.1 (2024-04-05)
 ==================
