@@ -6,6 +6,9 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.2.0 (2024-07-29)
+==================
+
 Features added
 --------------
 
