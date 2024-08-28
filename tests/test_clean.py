@@ -5,6 +5,7 @@ import unittest
 
 import lxml.html
 from lxml_html_clean import Cleaner, clean_html
+from .utils import peak_memory_usage
 
 
 class CleanerTest(unittest.TestCase):
@@ -333,3 +334,15 @@ class CleanerTest(unittest.TestCase):
         expected = """<a href="">Link</a>"""
         cleaner = Cleaner()
         self.assertEqual(expected, cleaner.clean_html(html))
+
+    def test_memory_usage_many_elements_with_long_tails(self):
+        comment = "<!-- foo bar baz -->\n"
+        empty_line = "\t" * 10 + "\n"
+        element = comment + empty_line * 10
+        content = element * 5_000
+        html = f"<html>{content}</html>"
+
+        cleaner = Cleaner()
+        mem = peak_memory_usage(cleaner.clean_html, html)
+
+        self.assertTrue(mem < 10, f"Used {mem} MiB memory, expected at most 10 MiB")
