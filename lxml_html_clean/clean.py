@@ -8,6 +8,7 @@ details.
 
 import copy
 import re
+from collections import deque
 from urllib.parse import urlsplit, unquote_plus
 
 from lxml import etree
@@ -383,8 +384,8 @@ class Cleaner:
         if self.annoying_tags:
             remove_tags.update(('blink', 'marquee'))
 
-        _remove = []
-        _kill = []
+        _remove = deque()
+        _kill = deque()
         for el in doc.iter():
             if el.tag in kill_tags:
                 if self.allow_element(el):
@@ -398,22 +399,22 @@ class Cleaner:
         if _remove and _remove[0] == doc:
             # We have to drop the parent-most tag, which we can't
             # do.  Instead we'll rewrite it:
-            el = _remove.pop(0)
+            el = _remove.popleft()
             el.tag = 'div'
             el.attrib.clear()
         elif _kill and _kill[0] == doc:
             # We have to drop the parent-most element, which we can't
             # do.  Instead we'll clear it:
-            el = _kill.pop(0)
+            el = _kill.popleft()
             if el.tag != 'html':
                 el.tag = 'div'
             el.clear()
 
-        _kill.reverse() # start with innermost tags
-        for el in _kill:
-            el.drop_tree()
-        for el in _remove:
-            el.drop_tag()
+        while _kill:
+            _kill.popleft().drop_tree()  # popleft to start with innermost elements
+
+        while _remove:
+            _remove.pop().drop_tag()
 
         if self.remove_unknown_tags:
             if allow_tags:
