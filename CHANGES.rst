@@ -6,6 +6,16 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.2.1 (2024-08-29)
+==================
+
+Bugs fixed
+----------
+
+* Memory efficiency is now much better for HTML pages where cleaner removes
+  a lot of elements. (#14)
+
+
 0.2.0 (2024-07-29)
 ==================
 
