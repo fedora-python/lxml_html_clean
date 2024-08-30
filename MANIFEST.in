@@ -1,0 +1,3 @@
+recursive-include tests *.txt *.py
+include tox.ini
+include CHANGES.rst

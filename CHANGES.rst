@@ -6,6 +6,14 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.2.2 (2024-08-30)
+==================
+
+Bugs fixed
+----------
+
+* sdist now includes all test files and changelog.
+
 0.2.1 (2024-08-29)
 ==================
 
