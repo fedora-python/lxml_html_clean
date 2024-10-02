@@ -185,6 +185,9 @@ class Cleaner:
 
         Note that you may also need to set ``whitelist_tags``.
 
+        Note that URLs are parsed via functions from ``urllib.parse`` and
+        no input validation is performed.
+
     ``whitelist_tags``:
         A set of tags that can be included with ``host_whitelist``.
         The default is ``iframe`` and ``embed``; you may wish to
