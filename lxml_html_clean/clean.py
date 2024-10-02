@@ -10,6 +10,7 @@ import copy
 import re
 from collections import deque
 from urllib.parse import urlsplit, unquote_plus
+import warnings
 
 from lxml import etree
 from lxml.html import defs
@@ -18,7 +19,7 @@ from lxml.html import xhtml_to_html, _transform_result
 
 
 __all__ = ['clean_html', 'clean', 'Cleaner', 'autolink', 'autolink_html',
-           'word_break', 'word_break_html']
+           'word_break', 'word_break_html', 'LXMLHTMLCleanWarning', 'AmbiguousURLWarning']
 
 # Look at http://code.sixapart.com/trac/livejournal/browser/trunk/cgi-bin/cleanhtml.pl
 #   Particularly the CSS cleaning; most of the tag cleaning is integrated now
@@ -98,6 +99,33 @@ def fromstring(string):
     before passing the input to the original lxml.html.fromstring.
     """
     return lxml_fromstring(_ascii_control_characters.sub("", string))
+
+
+# This regular expression is inspired by the one in urllib3.
+_URI_RE = re.compile(
+    r"^(?:(?P<scheme>[a-zA-Z][a-zA-Z0-9+.-]*[a-zA-Z0-9]):)?"
+    r"(?://(?P<authority>[^\\/?#]*))?"
+    r"(?P<path>[^?#]*)"
+    r"(?:\?(?P<query_string>[^#]*))?"
+    r"(?:#(?P<fragment>.*))?$",
+    re.UNICODE,
+)
+
+
+def _get_authority_from_url(url):
+    match = _URI_RE.match(url)
+    if match:
+        return match.group("authority")
+    else:
+        return None
+
+
+class LXMLHTMLCleanWarning(Warning):
+    pass
+
+
+class AmbiguousURLWarning(LXMLHTMLCleanWarning):
+    pass
 
 
 class Cleaner:
@@ -499,6 +527,14 @@ class Cleaner:
         parts = urlsplit(url)
         if parts.scheme not in ('http', 'https'):
             return False
+
+        authority = _get_authority_from_url(url)
+        if (parts.netloc or authority) and parts.netloc != authority:
+            warnings.warn(f"It's impossible to parse the hostname from URL: '{url}'! "
+                          "URL is not allowed because parsers returned ambiguous results.",
+                          AmbiguousURLWarning)
+            return False
+
         if parts.hostname in self.host_whitelist:
             return True
         return False

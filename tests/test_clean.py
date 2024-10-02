@@ -2,9 +2,10 @@ import base64
 import gzip
 import io
 import unittest
+import warnings
 
 import lxml.html
-from lxml_html_clean import Cleaner, clean_html
+from lxml_html_clean import AmbiguousURLWarning, Cleaner, clean_html, LXMLHTMLCleanWarning
 from .utils import peak_memory_usage
 
 
@@ -346,3 +347,15 @@ class CleanerTest(unittest.TestCase):
         mem = peak_memory_usage(cleaner.clean_html, html)
 
         self.assertTrue(mem < 10, f"Used {mem} MiB memory, expected at most 10 MiB")
+
+    def test_possibly_invalid_url(self):
+        cleaner = Cleaner(host_whitelist=['google.com'])
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = cleaner.clean_html(r"<p><iframe src='http://example.com:\@google.com'>  </iframe></p>")
+            self.assertGreaterEqual(len(w), 1)
+            self.assertIs(w[-1].category, AmbiguousURLWarning)
+            self.assertTrue(issubclass(w[-1].category, LXMLHTMLCleanWarning))
+            self.assertIn("impossible to parse the hostname", str(w[-1].message))
+        self.assertNotIn("google.com", result)
+        self.assertNotIn("example.com", result)
