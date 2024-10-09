@@ -524,6 +524,8 @@ class Cleaner:
         """
         if self.whitelist_tags is not None and el.tag not in self.whitelist_tags:
             return False
+        if not self.host_whitelist:
+            return False
         parts = urlsplit(url)
         if parts.scheme not in ('http', 'https'):
             return False
