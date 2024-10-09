@@ -348,7 +348,7 @@ class CleanerTest(unittest.TestCase):
 
         self.assertTrue(mem < 10, f"Used {mem} MiB memory, expected at most 10 MiB")
 
-    def test_possibly_invalid_url(self):
+    def test_possibly_invalid_url_with_whitelist(self):
         cleaner = Cleaner(host_whitelist=['google.com'])
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -357,5 +357,14 @@ class CleanerTest(unittest.TestCase):
             self.assertIs(w[-1].category, AmbiguousURLWarning)
             self.assertTrue(issubclass(w[-1].category, LXMLHTMLCleanWarning))
             self.assertIn("impossible to parse the hostname", str(w[-1].message))
+        self.assertNotIn("google.com", result)
+        self.assertNotIn("example.com", result)
+
+    def test_possibly_invalid_url_without_whitelist(self):
+        cleaner = Cleaner()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = cleaner.clean_html(r"<p><iframe src='http://example.com:\@google.com'>  </iframe></p>")
+            self.assertEqual(len(w), 0)
         self.assertNotIn("google.com", result)
         self.assertNotIn("example.com", result)
