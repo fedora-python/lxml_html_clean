@@ -6,6 +6,14 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.3.1 (2024-10-09)
+==================
+
+Features added
+--------------
+
+* Do not parse URL addresses when it is not necessary.
+
 0.3.0 (2024-10-09)
 ==================
 
