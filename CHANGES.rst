@@ -6,6 +6,14 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.3.0 (2024-10-09)
+==================
+
+Features added
+--------------
+
+* Parsing of URL addresses has been enhanced and Cleaner removes ambiguous URLs.
+
 0.2.2 (2024-08-30)
 ==================
 
