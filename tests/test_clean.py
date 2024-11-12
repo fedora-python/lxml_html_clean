@@ -127,6 +127,23 @@ class CleanerTest(unittest.TestCase):
             b'<math><style>/* deleted */</style></math>',
             lxml.html.tostring(clean_html(s)))
 
+    def test_sneaky_js_in_style_comment_math_svg(self):
+        for tag in "svg", "math":
+            html = f'<{tag}><style>/*<img src onerror=alert(origin)>*/'
+            s = lxml.html.fragment_fromstring(html)
+
+            self.assertEqual(
+                f'<{tag}><style>/* deleted */</style></{tag}>'.encode(),
+                lxml.html.tostring(clean_html(s)))
+
+    def test_sneaky_js_in_style_comment_noscript(self):
+        html = '<noscript><style>/*</noscript><img src onerror=alert(origin)>*/'
+        s = lxml.html.fragment_fromstring(html)
+
+        self.assertEqual(
+            b'<noscript><style>/* deleted */</style></noscript>',
+            lxml.html.tostring(clean_html(s)))
+
     def test_sneaky_import_in_style(self):
         # Prevent "@@importimport" -> "@import" replacement etc.
         style_codes = [

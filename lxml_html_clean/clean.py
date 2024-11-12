@@ -581,22 +581,27 @@ class Cleaner:
         that and remove only the Javascript from the style; this catches
         more sneaky attempts.
         """
-        style = self._substitute_comments('', style)
-        style = style.replace('\\', '')
         style = _substitute_whitespace('', style)
         style = style.lower()
-        if _has_javascript_scheme(style):
-            return True
-        if 'expression(' in style:
-            return True
-        if '@import' in style:
-            return True
-        if '</noscript' in style:
-            # e.g. '<noscript><style><a title="</noscript><img src=x onerror=alert(1)>">'
-            return True
-        if _looks_like_tag_content(style):
-            # e.g. '<math><style><img src=x onerror=alert(1)></style></math>'
-            return True
+
+        for with_comments in True, False:
+            if not with_comments:
+                style = self._substitute_comments('', style)
+
+            style = style.replace('\\', '')
+
+            if _has_javascript_scheme(style):
+                return True
+            if 'expression(' in style:
+                return True
+            if '@import' in style:
+                return True
+            if '</noscript' in style:
+                # e.g. '<noscript><style><a title="</noscript><img src=x onerror=alert(1)>">'
+                return True
+            if _looks_like_tag_content(style):
+                # e.g. '<math><style><img src=x onerror=alert(1)></style></math>'
+                return True
         return False
 
     def clean_html(self, html):
