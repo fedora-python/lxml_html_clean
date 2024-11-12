@@ -6,6 +6,17 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.4.0 (2024-11-12)
+==================
+
+Bugs fixed
+----------
+
+* The ``Cleaner()`` now scans for hidden JavaScript code embedded
+  within CSS comments. In certain contexts, such as within ``<svg>`` or ``<math>`` tags,
+  ``<style>`` tags may lose their intended function, allowing comments
+  like ``/* foo */`` to potentially be executed by the browser.
+
 0.3.1 (2024-10-09)
 ==================
 
