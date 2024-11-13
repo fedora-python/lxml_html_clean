@@ -129,19 +129,21 @@ class CleanerTest(unittest.TestCase):
 
     def test_sneaky_js_in_style_comment_math_svg(self):
         for tag in "svg", "math":
-            html = f'<{tag}><style>/*<img src onerror=alert(origin)>*/'
+            html = f'<{tag}><style>p {{color: red;}}/*<img src onerror=alert(origin)>*/h2 {{color: blue;}}</style></{tag}>'
             s = lxml.html.fragment_fromstring(html)
 
+            expected = f'<{tag}><style>p {{color: red;}}/* deleted */h2 {{color: blue;}}</style></{tag}>'.encode()
+
             self.assertEqual(
-                f'<{tag}><style>/* deleted */</style></{tag}>'.encode(),
+                expected,
                 lxml.html.tostring(clean_html(s)))
 
     def test_sneaky_js_in_style_comment_noscript(self):
-        html = '<noscript><style>/*</noscript><img src onerror=alert(origin)>*/'
+        html = '<noscript><style>p {{color: red;}}/*</noscript><img src onerror=alert(origin)>*/h2 {{color: blue;}}</style></noscript>'
         s = lxml.html.fragment_fromstring(html)
 
         self.assertEqual(
-            b'<noscript><style>/* deleted */</style></noscript>',
+            b'<noscript><style>p {{color: red;}}/* deleted */h2 {{color: blue;}}</style></noscript>',
             lxml.html.tostring(clean_html(s)))
 
     def test_sneaky_import_in_style(self):

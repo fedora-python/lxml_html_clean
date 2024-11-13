@@ -366,8 +366,11 @@ class Cleaner:
                     new = _replace_css_import('', new)
                     if self._has_sneaky_javascript(new):
                         # Something tricky is going on...
-                        el.text = '/* deleted */'
-                    elif new != old:
+                        new = '/* deleted */'
+                    else:
+                        new = self._remove_sneaky_css_comments(new)
+
+                    if new != old:
                         el.text = new
         if self.comments:
             kill_tags.add(etree.Comment)
@@ -568,7 +571,9 @@ class Cleaner:
             return ''
         return link
 
-    _substitute_comments = re.compile(r'/\*.*?\*/', re.S).sub
+    _comments_re = re.compile(r'/\*.*?\*/', re.S)
+    _find_comments = _comments_re.finditer
+    _substitute_comments = _comments_re.sub
 
     def _has_sneaky_javascript(self, style):
         """
@@ -581,28 +586,41 @@ class Cleaner:
         that and remove only the Javascript from the style; this catches
         more sneaky attempts.
         """
+        style = self._substitute_comments('', style)
+        style = style.replace('\\', '')
         style = _substitute_whitespace('', style)
         style = style.lower()
-
-        for with_comments in True, False:
-            if not with_comments:
-                style = self._substitute_comments('', style)
-
-            style = style.replace('\\', '')
-
-            if _has_javascript_scheme(style):
-                return True
-            if 'expression(' in style:
-                return True
-            if '@import' in style:
-                return True
-            if '</noscript' in style:
-                # e.g. '<noscript><style><a title="</noscript><img src=x onerror=alert(1)>">'
-                return True
-            if _looks_like_tag_content(style):
-                # e.g. '<math><style><img src=x onerror=alert(1)></style></math>'
-                return True
+        if _has_javascript_scheme(style):
+            return True
+        if 'expression(' in style:
+            return True
+        if '@import' in style:
+            return True
+        if '</noscript' in style:
+            # e.g. '<noscript><style><a title="</noscript><img src=x onerror=alert(1)>">'
+            return True
+        if _looks_like_tag_content(style):
+            # e.g. '<math><style><img src=x onerror=alert(1)></style></math>'
+            return True
         return False
+
+    def _remove_sneaky_css_comments(self, style):
+        """
+        Look for suspicious code in CSS comment and if found,
+        remove the entire comment from the given style.
+
+        Browsers might parse <style> as an ordinary HTML tag
+        in some specific context and that might cause code in CSS
+        comments to run.
+        """
+        for match in self._find_comments(style):
+            comment = match.group(0)
+            print("f", comment)
+            if _has_javascript_scheme(comment) or _looks_like_tag_content(comment):
+                style = style.replace(comment, "/* deleted */")
+                print("f", style)
+
+        return style
 
     def clean_html(self, html):
         result_type = type(html)

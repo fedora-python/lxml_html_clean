@@ -16,6 +16,7 @@ Bugs fixed
   within CSS comments. In certain contexts, such as within ``<svg>`` or ``<math>`` tags,
   ``<style>`` tags may lose their intended function, allowing comments
   like ``/* foo */`` to potentially be executed by the browser.
+  If a suspicious content is detected, only the comment is removed.
 
 0.3.1 (2024-10-09)
 ==================
