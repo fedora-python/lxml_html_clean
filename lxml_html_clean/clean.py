@@ -615,10 +615,8 @@ class Cleaner:
         """
         for match in self._find_comments(style):
             comment = match.group(0)
-            print("f", comment)
             if _has_javascript_scheme(comment) or _looks_like_tag_content(comment):
                 style = style.replace(comment, "/* deleted */")
-                print("f", style)
 
         return style
 
