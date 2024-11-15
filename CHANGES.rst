@@ -6,6 +6,14 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.4.1 (2024-11-15)
+==================
+
+Bugs fixed
+----------
+
+* Removed superfluous debug prints.
+
 0.4.0 (2024-11-12)
 ==================
 
