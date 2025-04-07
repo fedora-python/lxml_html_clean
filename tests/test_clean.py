@@ -355,6 +355,12 @@ class CleanerTest(unittest.TestCase):
         cleaner = Cleaner()
         self.assertEqual(expected, cleaner.clean_html(html))
 
+    def test_ascii_control_chars_removed_from_bytes(self):
+        html = b"""<a href="java\x1bscript:alert()">Link</a>"""
+        expected = b"""<a href="">Link</a>"""
+        cleaner = Cleaner()
+        self.assertEqual(expected, cleaner.clean_html(html))
+
     def test_memory_usage_many_elements_with_long_tails(self):
         comment = "<!-- foo bar baz -->\n"
         empty_line = "\t" * 10 + "\n"
