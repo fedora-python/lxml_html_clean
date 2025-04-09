@@ -6,6 +6,15 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.4.2 (2025-04-09)
+==================
+
+Bugs fixed
+----------
+
+* `lxml_html_clean` now correctly handles HTML input as bytes
+  as it did before the 0.2.0 release.
+
 0.4.1 (2024-11-15)
 ==================
 
