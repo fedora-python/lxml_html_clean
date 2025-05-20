@@ -109,6 +109,11 @@ which content is removed:
       </body>
     </html>
 
+To control the removal of CSS styles, use the ``style`` and/or ``inline_style``
+keyword arguments when creating a ``Cleaner`` instance.
+If neither option is enabled, only ``@import`` rules are automatically removed
+from CSS content.
+
 You can also whitelist some otherwise dangerous content with
 ``Cleaner(host_whitelist=['www.youtube.com'])``, which would allow
 embedded media from YouTube, while still filtering out embedded media
