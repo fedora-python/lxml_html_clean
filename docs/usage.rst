@@ -109,8 +109,8 @@ which content is removed:
       </body>
     </html>
 
-To control the removal of CSS styles, use the ``style`` and/or ``inline_style``
-keyword arguments when creating a ``Cleaner`` instance.
+To control the removal of CSS styles, set the ``style`` and/or ``inline_style``
+keyword arguments to ``True`` when creating a ``Cleaner`` instance.
 If neither option is enabled, only ``@import`` rules are automatically removed
 from CSS content.
 
