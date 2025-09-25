@@ -321,7 +321,7 @@ class CleanerTest(unittest.TestCase):
         # creates a host_whitelist of the empty string; a malformed triple-slash
         # URL has an "empty host" according to urlsplit, and `"" in ""` passes.
         # So, don't allow user to accidentally pass a string for host_whitelist.
-        html = '<div><iframe src="https:///evil.com/page"></div>'
+        html = '<div><iframe src="https:///evil.com/page"></iframe></div>'
         with self.assertRaises(TypeError) as exc:
             # If this were the intended `("example.com",)` the expected
             # output would be '<div></div>'
@@ -331,20 +331,20 @@ class CleanerTest(unittest.TestCase):
 
     def test_host_whitelist_valid(self):
         # Frame with valid hostname in src is allowed.
-        html = '<div><iframe src="https://example.com/page"></div>'
+        html = '<div><iframe src="https://example.com/page"></iframe></div>'
         expected = '<div><iframe src="https://example.com/page"></iframe></div>'
         cleaner = Cleaner(frames=False, host_whitelist=["example.com"])
         self.assertEqual(expected, cleaner.clean_html(html))
 
     def test_host_whitelist_invalid(self):
-        html = '<div><iframe src="https://evil.com/page"></div>'
+        html = '<div><iframe src="https://evil.com/page"></iframe></div>'
         expected = '<div></div>'
         cleaner = Cleaner(frames=False, host_whitelist=["example.com"])
         self.assertEqual(expected, cleaner.clean_html(html))
 
     def test_host_whitelist_sneaky_userinfo(self):
         # Regression test: Don't be fooled by hostname and colon in userinfo.
-        html = '<div><iframe src="https://example.com:@evil.com/page"></div>'
+        html = '<div><iframe src="https://example.com:@evil.com/page"></iframe></div>'
         expected = '<div></div>'
         cleaner = Cleaner(frames=False, host_whitelist=["example.com"])
         self.assertEqual(expected, cleaner.clean_html(html))
