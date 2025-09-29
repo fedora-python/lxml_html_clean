@@ -321,7 +321,7 @@ class CleanerTest(unittest.TestCase):
         # creates a host_whitelist of the empty string; a malformed triple-slash
         # URL has an "empty host" according to urlsplit, and `"" in ""` passes.
         # So, don't allow user to accidentally pass a string for host_whitelist.
-        html = '<div><iframe src="https:///evil.com/page"></iframe></div>'
+        html = '<div><iframe src="https:///evil.com/page"></div>'
         with self.assertRaises(TypeError) as exc:
             # If this were the intended `("example.com",)` the expected
             # output would be '<div></div>'
