@@ -84,7 +84,7 @@
   <body onload="evil_function()">
     <!-- I am interpreted for EVIL! -->
     <a href="javascript:evil_function()">a link</a>
-    <a href="javascrip%20t%20:evil_function()">a control char link</a>
+    <a href="j%01a%02v%03a%04s%05c%06r%07i%0Ep%20t%20:evil_function()">a control char link</a>
     <a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgidGVzdCIpOzwvc2NyaXB0Pg==">data</a>
     <a href="#" onclick="evil_function()">another link</a>
     <p onclick="evil_function()">a paragraph</p>
