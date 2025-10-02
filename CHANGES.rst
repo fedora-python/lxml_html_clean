@@ -6,6 +6,16 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.4.3 (2025-10-02)
+==================
+
+Maintenance
+-----------
+
+* Tests updated to work correctly with new lxml and libxml2 releases.
+* Python 3.6 and 3.7 are no longer tested.
+* Improved documentation about CSS removal behavior.
+
 0.4.2 (2025-04-09)
 ==================
 
