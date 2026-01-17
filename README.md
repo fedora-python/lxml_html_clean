@@ -4,7 +4,7 @@
 
 This project was initially a part of [lxml](https://github.com/lxml/lxml). Because HTML cleaner is designed as blocklist-based, many reports about possible security vulnerabilities were filed for lxml and that make the project problematic for security-sensitive environments. Therefore we decided to extract the problematic part to a separate project.
 
-**Important**: the HTML Cleaner in ``lxml_html_clean`` is **not** considered appropriate **for security sensitive environments**. See e.g. [bleach](https://pypi.org/project/bleach/) for an alternative.
+**Important**: the HTML Cleaner in ``lxml_html_clean`` is **not** considered appropriate **for security sensitive environments**. See e.g. [nh3](https://github.com/messense/nh3) for an alternative.
 
 This project uses functions from Python's `urllib.parse` for URL parsing which **do not validate inputs**. For more information on potential security risks, refer to the [URL parsing security](https://docs.python.org/3/library/urllib.parse.html#url-parsing-security) documentation. A maliciously crafted URL could potentially bypass the allowed hosts check in `Cleaner`.
 
