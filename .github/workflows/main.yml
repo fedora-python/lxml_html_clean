@@ -22,12 +22,12 @@ jobs:
     strategy:
       matrix:
         tox_env:
-          - py38
           - py39
           - py310
           - py311
           - py312
           - py313
+          - py314
           - mypy
 
     # Use GitHub's Linux Docker host
