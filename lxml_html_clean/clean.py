@@ -578,6 +578,26 @@ class Cleaner:
     _comments_re = re.compile(r'/\*.*?\*/', re.S)
     _find_comments = _comments_re.finditer
     _substitute_comments = _comments_re.sub
+    _css_unicode_escape_re = re.compile(r'\\([0-9a-fA-F]{1,6})\s?')
+
+    def _decode_css_unicode_escapes(self, style):
+        """
+        Decode CSS Unicode escape sequences like \\69 or \\000069 to their
+        actual character values. This prevents bypassing security checks
+        using CSS escape sequences.
+
+        CSS escape syntax: backslash followed by 1-6 hex digits,
+        optionally followed by a whitespace character.
+        """
+        def replace_escape(match):
+            hex_value = match.group(1)
+            try:
+                return chr(int(hex_value, 16))
+            except (ValueError, OverflowError):
+                # Invalid unicode codepoint, keep original
+                return match.group(0)
+
+        return self._css_unicode_escape_re.sub(replace_escape, style)
 
     def _has_sneaky_javascript(self, style):
         """
@@ -591,7 +611,7 @@ class Cleaner:
         more sneaky attempts.
         """
         style = self._substitute_comments('', style)
-        style = style.replace('\\', '')
+        style = self._decode_css_unicode_escapes(style)
         style = _substitute_whitespace('', style)
         style = style.lower()
         if _has_javascript_scheme(style):
