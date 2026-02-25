@@ -394,6 +394,54 @@ class CleanerTest(unittest.TestCase):
         self.assertNotIn("google.com", result)
         self.assertNotIn("example.com", result)
 
+    def test_base_tag_removed_with_page_structure(self):
+        # Test that <base> tags are removed when page_structure=True (default)
+        # This prevents URL hijacking attacks where <base> redirects all relative URLs
+
+        test_cases = [
+            # <base> in proper location (inside <head>)
+            '<html><head><base href="http://evil.com/"></head><body><a href="page.html">link</a></body></html>',
+            # <base> outside <head>
+            '<div><base href="http://evil.com/"><a href="page.html">link</a></div>',
+            # Multiple <base> tags
+            '<base href="http://evil.com/"><div><base href="http://evil2.com/"></div>',
+            # <base> with target attribute
+            '<base target="_blank"><div>content</div>',
+            # <base> at various positions
+            '<html><base href="http://evil.com/"><body>test</body></html>',
+        ]
+
+        for html in test_cases:
+            with self.subTest(html=html):
+                cleaned = clean_html(html)
+                # Verify <base> tag is completely removed
+                self.assertNotIn('base', cleaned.lower())
+                self.assertNotIn('evil.com', cleaned)
+                self.assertNotIn('evil2.com', cleaned)
+
+    def test_base_tag_kept_when_page_structure_false(self):
+        # When page_structure=False and head is not removed, <base> should be kept
+        cleaner = Cleaner(page_structure=False)
+        html = '<html><head><base href="http://example.com/"></head><body>test</body></html>'
+        cleaned = cleaner.clean_html(html)
+        self.assertIn('<base href="http://example.com/">', cleaned)
+
+    def test_base_tag_removed_when_head_in_remove_tags(self):
+        # Even with page_structure=False, <base> should be removed if head is manually removed
+        cleaner = Cleaner(page_structure=False, remove_tags=['head'])
+        html = '<html><head><base href="http://evil.com/"></head><body>test</body></html>'
+        cleaned = cleaner.clean_html(html)
+        self.assertNotIn('base', cleaned.lower())
+        self.assertNotIn('evil.com', cleaned)
+
+    def test_base_tag_removed_when_head_in_kill_tags(self):
+        # Even with page_structure=False, <base> should be removed if head is in kill_tags
+        cleaner = Cleaner(page_structure=False, kill_tags=['head'])
+        html = '<html><head><base href="http://evil.com/"></head><body>test</body></html>'
+        cleaned = cleaner.clean_html(html)
+        self.assertNotIn('base', cleaned.lower())
+        self.assertNotIn('evil.com', cleaned)
+
     def test_unicode_escape_in_style(self):
         # Test that CSS Unicode escapes are properly decoded before security checks
         # This prevents attackers from bypassing filters using escape sequences

@@ -12,6 +12,11 @@ Bugs fixed
 * Fixed a bug where Unicode escapes in CSS were not properly decoded
   before security checks. This prevents attackers from bypassing filters
   using escape sequences.
+* Fixed a security issue where ``<base>`` tags could be used for URL
+  hijacking attacks. The ``<base>`` tag is now automatically removed
+  whenever the ``<head>`` tag is removed (via ``page_structure=True``
+  or manual configuration), as ``<base>`` must be inside ``<head>``
+  according to HTML specifications.
 
 0.4.3 (2025-10-02)
 ==================
