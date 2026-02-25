@@ -6,6 +6,13 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+Bugs fixed
+----------
+
+* Fixed a bug where Unicode escapes in CSS were not properly decoded
+  before security checks. This prevents attackers from bypassing filters
+  using escape sequences.
+
 0.4.3 (2025-10-02)
 ==================
 

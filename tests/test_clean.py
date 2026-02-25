@@ -393,3 +393,51 @@ class CleanerTest(unittest.TestCase):
             self.assertEqual(len(w), 0)
         self.assertNotIn("google.com", result)
         self.assertNotIn("example.com", result)
+
+    def test_unicode_escape_in_style(self):
+        # Test that CSS Unicode escapes are properly decoded before security checks
+        # This prevents attackers from bypassing filters using escape sequences
+        # CSS escape syntax: \HHHHHH where H is a hex digit (1-6 digits)
+
+        # Test inline style attributes (requires safe_attrs_only=False)
+        cleaner = Cleaner(safe_attrs_only=False)
+        inline_style_cases = [
+            # \6a\61\76\61\73\63\72\69\70\74 = "javascript"
+            ('<div style="background: url(\\6a\\61\\76\\61\\73\\63\\72\\69\\70\\74:alert(1))">test</div>', '<div>test</div>'),
+            # \69 = 'i', so \69mport = "import"
+            ('<div style="@\\69mport url(evil.css)">test</div>', '<div>test</div>'),
+            # \69 with space after = 'i', space consumed as part of escape
+            ('<div style="@\\69 mport url(evil.css)">test</div>', '<div>test</div>'),
+            # \65\78\70\72\65\73\73\69\6f\6e = "expression"
+            ('<div style="\\65\\78\\70\\72\\65\\73\\73\\69\\6f\\6e(alert(1))">test</div>', '<div>test</div>'),
+        ]
+
+        for html, expected in inline_style_cases:
+            with self.subTest(html=html):
+                cleaned = cleaner.clean_html(html)
+                self.assertEqual(expected, cleaned)
+
+        # Test <style> tag content (uses default clean_html)
+        style_tag_cases = [
+            # Unicode-escaped "javascript:" in url()
+            '<style>url(\\6a\\61\\76\\61\\73\\63\\72\\69\\70\\74:alert(1))</style>',
+            # Unicode-escaped "javascript:" without url()
+            '<style>\\6a\\61\\76\\61\\73\\63\\72\\69\\70\\74:alert(1)</style>',
+            # Unicode-escaped "expression"
+            '<style>\\65\\78\\70\\72\\65\\73\\73\\69\\6f\\6e(alert(1))</style>',
+            # Unicode-escaped @import with 'i'
+            '<style>@\\69mport url(evil.css)</style>',
+            # Unicode-escaped "data:" scheme
+            '<style>url(\\64\\61\\74\\61:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+)</style>',
+            # Space after escape is consumed: \69 mport = "import"
+            '<style>@\\69 mport url(evil.css)</style>',
+            # 6-digit escape: \000069 = 'i'
+            '<style>@\\000069mport url(evil.css)</style>',
+            # 6-digit escape with space
+            '<style>@\\000069 mport url(evil.css)</style>',
+        ]
+
+        for html in style_tag_cases:
+            with self.subTest(html=html):
+                cleaned = clean_html(html)
+                self.assertEqual('<div><style>/* deleted */</style></div>', cleaned)
