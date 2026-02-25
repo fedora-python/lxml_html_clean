@@ -422,6 +422,12 @@ class Cleaner:
         if self.annoying_tags:
             remove_tags.update(('blink', 'marquee'))
 
+        # Remove <base> tags whenever <head> is being removed.
+        # According to HTML spec, <base> must be in <head>, but browsers
+        # may interpret it even when misplaced, allowing URL hijacking attacks.
+        if 'head' in kill_tags or 'head' in remove_tags:
+            kill_tags.add('base')
+
         _remove = deque()
         _kill = deque()
         for el in doc.iter():
