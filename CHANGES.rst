@@ -6,6 +6,9 @@ lxml_html_clean changelog
 Unreleased
 ==========
 
+0.4.4 (2026-02-26)
+==================
+
 Bugs fixed
 ----------
 
