@@ -489,3 +489,99 @@ class CleanerTest(unittest.TestCase):
             with self.subTest(html=html):
                 cleaned = clean_html(html)
                 self.assertEqual('<div><style>/* deleted */</style></div>', cleaned)
+
+    def test_unicode_escape_mixed_with_comments(self):
+        # Unicode escapes mixed with CSS comments should still be caught
+        test_cases = [
+            # \69 = 'i' with comment before
+            '<style>@/*comment*/\\69mport url(evil.css)</style>',
+            # \69 = 'i' with comment after
+            '<style>@\\69mport/*comment*/ url(evil.css)</style>',
+            # Multiple escapes with comments
+            '<style>\\65\\78/*comment*/\\70\\72\\65\\73\\73\\69\\6f\\6e(alert(1))</style>',
+        ]
+
+        for html in test_cases:
+            with self.subTest(html=html):
+                cleaned = clean_html(html)
+                self.assertEqual('<div><style>/* deleted */</style></div>', cleaned)
+
+    def test_unicode_escape_case_insensitive(self):
+        # CSS hex escapes should work with both uppercase and lowercase hex digits
+        # \69 = 'i', \6D = 'm', etc.
+        test_cases = [
+            # @import with uppercase hex digits: \69\6D\70\6F\72\74
+            '<style>@\\69\\6D\\70\\6F\\72\\74 url(evil.css)</style>',
+            # @import with some uppercase
+            '<style>@\\69\\6D\\70\\6f\\72\\74 url(evil.css)</style>',
+        ]
+
+        for html in test_cases:
+            with self.subTest(html=html):
+                cleaned = clean_html(html)
+                self.assertEqual('<div><style>/* deleted */</style></div>', cleaned)
+
+    def test_unicode_escape_various_schemes(self):
+        # Test Unicode escapes for various malicious schemes
+        test_cases = [
+            # \76\62\73\63\72\69\70\74 = "vbscript"
+            '<style>url(\\76\\62\\73\\63\\72\\69\\70\\74:alert(1))</style>',
+            # \6a\73\63\72\69\70\74 = "jscript"
+            '<style>url(\\6a\\73\\63\\72\\69\\70\\74:alert(1))</style>',
+            # \6c\69\76\65\73\63\72\69\70\74 = "livescript"
+            '<style>url(\\6c\\69\\76\\65\\73\\63\\72\\69\\70\\74:alert(1))</style>',
+            # \6d\6f\63\68\61 = "mocha"
+            '<style>url(\\6d\\6f\\63\\68\\61:alert(1))</style>',
+        ]
+
+        for html in test_cases:
+            with self.subTest(html=html):
+                cleaned = clean_html(html)
+                self.assertEqual('<div><style>/* deleted */</style></div>', cleaned)
+
+    def test_unicode_escape_with_whitespace_variations(self):
+        # Test different whitespace characters after Unicode escapes
+        cleaner = Cleaner(safe_attrs_only=False)
+        test_cases = [
+            # Tab after escape
+            ('<div style="@\\69\tmport url(evil.css)">test</div>', '<div>test</div>'),
+            # Newline after escape (note: actual newline, not \n)
+            ('<div style="@\\69\nmport url(evil.css)">test</div>', '<div>test</div>'),
+            # Form feed after escape
+            ('<div style="@\\69\fmport url(evil.css)">test</div>', '<div>test</div>'),
+        ]
+
+        for html, expected in test_cases:
+            with self.subTest(html=html):
+                cleaned = cleaner.clean_html(html)
+                self.assertEqual(expected, cleaned)
+
+    def test_backslash_removal_after_unicode_decode(self):
+        # After decoding Unicode escapes, remaining backslashes are removed
+        # This ensures double-obfuscation (unicode + backslashes) is caught
+        test_cases = [
+            # Step 1: \69 → 'i', Step 2: remove \, Result: @import
+            '<style>@\\69\\m\\p\\o\\r\\t url(evil.css)</style>',
+            # Multiple unicode escapes with backslashes mixed in
+            '<style>@\\69\\6d\\p\\6f\\r\\t url(evil.css)</style>',
+        ]
+
+        for html in test_cases:
+            with self.subTest(html=html):
+                cleaned = clean_html(html)
+                self.assertEqual('<div><style>/* deleted */</style></div>', cleaned)
+
+    def test_backslash_obfuscation_without_unicode(self):
+        # Test that patterns using ONLY backslash obfuscation (no unicode) are caught
+        # Step 1: No unicode escapes, Step 2: remove \, Result: malicious pattern
+        test_cases = [
+            # @\i\m\p\o\r\t → @import (caught by '@import' check)
+            '<style>@\\i\\m\\p\\o\\r\\t url(evil.css)</style>',
+            # Can also test combinations that create javascript schemes
+            '<style>@\\import url(evil.css)</style>',
+        ]
+
+        for html in test_cases:
+            with self.subTest(html=html):
+                cleaned = clean_html(html)
+                self.assertEqual('<div><style>/* deleted */</style></div>', cleaned)
