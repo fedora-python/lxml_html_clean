@@ -618,6 +618,7 @@ class Cleaner:
         """
         style = self._substitute_comments('', style)
         style = self._decode_css_unicode_escapes(style)
+        style = style.replace('\\', '')
         style = _substitute_whitespace('', style)
         style = style.lower()
         if _has_javascript_scheme(style):
