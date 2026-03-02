@@ -14,12 +14,12 @@ Bugs fixed
 
 * Fixed a bug where Unicode escapes in CSS were not properly decoded
   before security checks. This prevents attackers from bypassing filters
-  using escape sequences.
+  using escape sequences. (CVE-2026-28348)
 * Fixed a security issue where ``<base>`` tags could be used for URL
   hijacking attacks. The ``<base>`` tag is now automatically removed
   whenever the ``<head>`` tag is removed (via ``page_structure=True``
   or manual configuration), as ``<base>`` must be inside ``<head>``
-  according to HTML specifications.
+  according to HTML specifications. (CVE-2026-28350)
 
 0.4.3 (2025-10-02)
 ==================
@@ -58,7 +58,7 @@ Bugs fixed
   within CSS comments. In certain contexts, such as within ``<svg>`` or ``<math>`` tags,
   ``<style>`` tags may lose their intended function, allowing comments
   like ``/* foo */`` to potentially be executed by the browser.
-  If a suspicious content is detected, only the comment is removed.
+  If a suspicious content is detected, only the comment is removed. (CVE-2024-52595)
 
 0.3.1 (2024-10-09)
 ==================
