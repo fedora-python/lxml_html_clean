@@ -13,15 +13,15 @@ THIS FAILS IN libxml2 2.6.29 AND 2.6.30 !!
 ...     return s
 
 >>> doc_embed = '''<div>
-... <embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash"></embed>
-... <embed src="http://anothersite.com/v/another"></embed>
+... <embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash">
+... <embed src="http://anothersite.com/v/another">
 ... <script src="http://www.youtube.com/example.js"></script>
 ... <script src="/something-else.js"></script>
 ... </div>'''
 >>> print(tostring(fromstring(doc_embed)))
 <div>
-<embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash"></embed>
-<embed src="http://anothersite.com/v/another"></embed>
+<embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash">
+<embed src="http://anothersite.com/v/another">
 <script src="http://www.youtube.com/example.js"></script>
 <script src="/something-else.js"></script>
 </div>
@@ -30,10 +30,10 @@ THIS FAILS IN libxml2 2.6.29 AND 2.6.30 !!
 </div>
 >>> print(Cleaner(host_whitelist=['www.youtube.com']).clean_html(doc_embed))
 <div>
-<embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash"></embed>
+<embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash">
 </div>
 >>> print(Cleaner(host_whitelist=['www.youtube.com'], whitelist_tags=None).clean_html(doc_embed))
 <div>
-<embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash"></embed>
+<embed src="http://www.youtube.com/v/183tVH1CZpA" type="application/x-shockwave-flash">
 <script src="http://www.youtube.com/example.js"></script>
 </div>
