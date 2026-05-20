@@ -3,8 +3,17 @@ lxml_html_clean changelog
 =========================
 
 
-Unreleased
-==========
+0.4.5 (2026-05-20)
+==================
+
+Bugs fixed
+----------
+
+* Fixed a security vulnerability where ``javascript:`` URLs in ``xlink:href``
+  attributes were not sanitized when``safe_attrs_only=False``, allowing
+  cross-site scripting (XSS) attacks. The fix requires ``lxml>=6.1.1``,
+  which adds ``xlink:href`` to the set of link attributes iterated by
+  ``rewrite_links()``. Reported by Guillem Lefait (@glefait).
 
 0.4.4 (2026-02-26)
 ==================
