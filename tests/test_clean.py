@@ -631,17 +631,19 @@ class CleanerTest(unittest.TestCase):
 
     def test_conditional_comment_still_detected(self):
         # Real conditional comments must still be killed when comments=False.
+        # fragment_fromstring is used so lxml preserves the comment nodes.
         cleaner = Cleaner(comments=False)
         cases = [
-            '<!--[if IE]>evil<![endif]-->',
-            '<!--[if lt IE 9]>evil<![endif]-->',
-            '<!--[if !IE]>evil<![endif]-->',
-            '<!--[if (gt IE 5)&(lt IE 8)]>evil<![endif]-->',
-            '<!--[IF ie]>evil<![endif]-->',
+            '<!--[if IE]>evil<![endif]--><p>ok</p>',
+            '<!--[if lt IE 9]>evil<![endif]--><p>ok</p>',
+            '<!--[if !IE]>evil<![endif]--><p>ok</p>',
+            '<!--[if (gt IE 5)&(lt IE 8)]>evil<![endif]--><p>ok</p>',
+            '<!--[IF ie]>evil<![endif]--><p>ok</p>',
         ]
         for html in cases:
             with self.subTest(html=html):
-                result = cleaner.clean_html(html)
+                doc = lxml.html.fragment_fromstring(html, create_parent='div')
+                result = lxml.html.tostring(cleaner.clean_html(doc)).decode()
                 self.assertNotIn('evil', result)
 
     def test_redos_css_comments(self):

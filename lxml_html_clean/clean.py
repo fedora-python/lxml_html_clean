@@ -74,8 +74,18 @@ def _has_javascript_scheme(s):
 _substitute_whitespace = re.compile(r'[\s\x00-\x08\x0B\x0C\x0E-\x19]+').sub
 
 # FIXME: check against: http://msdn2.microsoft.com/en-us/library/ms537512.aspx
-_conditional_comment_re = re.compile(
-    r'\[if[\s\n\r]+.*?][\s\n\r]*>', re.I|re.S)
+# Single pattern r'\[if\s+.*?]\s*>' is quadratic: every '[if' in
+# the text starts a lazy scan to the end looking for ']>'. Only the boolean
+# result is used, so two cheap linear searches decide it instead.
+_conditional_comment_open_re = re.compile(r'\[if\s', re.I)
+_conditional_comment_close_re = re.compile(r'](?=\s*>)')
+
+
+def _has_conditional_comment(text):
+    opening = _conditional_comment_open_re.search(text)
+    if opening is None:
+        return False
+    return _conditional_comment_close_re.search(text, opening.end()) is not None
 
 _find_styled_elements = etree.XPath(
     "descendant-or-self::*[@style]")
@@ -560,10 +570,9 @@ class Cleaner:
         doesn't normally see.  We can't allow anything like that, so
         we'll kill any comments that could be conditional.
         """
-        has_conditional_comment = _conditional_comment_re.search
         self._kill_elements(
-            doc, lambda el: has_conditional_comment(el.text),
-            etree.Comment)                
+            doc, lambda el: _has_conditional_comment(el.text),
+            etree.Comment)
 
     def _kill_elements(self, doc, condition, iterate=None):
         bad = []
