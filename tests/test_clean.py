@@ -671,3 +671,28 @@ class CleanerTest(unittest.TestCase):
         # Ordinary CSS with comments must survive unchanged.
         result = clean_html('<style>/* safe comment */ p { color: red; }</style>')
         self.assertIn('color: red', result)
+
+    def test_redos_image_dataurl_via_href(self):
+        # ReDoS: data:image/(.+?);base64, is quadratic when many 'data:image/'
+        # appear without ';base64,'. Reachable with default config via any link
+        # attribute (_remove_javascript_link -> _has_javascript_scheme).
+        payload = 'data:image/' * 15000
+        html = f'<a href="{payload}">x</a>'
+        start = time.time()
+        clean_html(html)
+        self.assertLess(time.time() - start, 2.0, 'image data-url scan is quadratic')
+
+    def test_redos_image_dataurl_via_style_element(self):
+        # Same ReDoS reachable via <style> content (_has_sneaky_javascript).
+        payload = 'data:image/' * 15000
+        html = f'<style>a{{background:{payload}}}</style>'
+        start = time.time()
+        clean_html(html)
+        self.assertLess(time.time() - start, 2.0, 'image data-url scan is quadratic')
+
+    def test_image_dataurl_svg_still_detected(self):
+        # The bounded regex must still flag unsafe svg/xml image data-urls
+        # and still accept ordinary raster image data-urls.
+        from lxml_html_clean.clean import _has_javascript_scheme
+        self.assertTrue(_has_javascript_scheme('data:image/svg+xml;base64,PHN2Zz4='))
+        self.assertFalse(_has_javascript_scheme('data:image/png;base64,AAAA'))
