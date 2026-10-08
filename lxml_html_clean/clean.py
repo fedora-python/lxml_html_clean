@@ -43,7 +43,7 @@ __all__ = ['clean_html', 'clean', 'Cleaner', 'autolink', 'autolink_html',
 # This is an IE-specific construct you can have in a stylesheet to
 # run some Javascript:
 _replace_css_javascript = re.compile(
-    r'expression\s*\(.*?\)', re.S|re.I).sub
+    r'expression\s*\(.{0,1024}?\)', re.S|re.I).sub
 
 # Do I have to worry about @\nimport?
 _replace_css_import = re.compile(
