@@ -639,6 +639,12 @@ class CleanerTest(unittest.TestCase):
             '<!--[if !IE]>evil<![endif]--><p>ok</p>',
             '<!--[if (gt IE 5)&(lt IE 8)]>evil<![endif]--><p>ok</p>',
             '<!--[IF ie]>evil<![endif]--><p>ok</p>',
+            # A ']' inside the condition. The replaced '.*?' under re.S could
+            # cross it, so these must still be killed — this is why a bounded
+            # '[^\]]{0,2000}' body was rejected: it cannot cross a ']' and
+            # would let them through.
+            '<!--[if a]b]>evil<![endif]--><p>ok</p>',
+            '<!--[if x]]>evil<![endif]--><p>ok</p>',
         ]
         for html in cases:
             with self.subTest(html=html):
