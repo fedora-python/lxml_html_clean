@@ -3,6 +3,36 @@ lxml_html_clean changelog
 =========================
 
 
+0.4.6 (2026-10-26)
+==================
+
+Bugs fixed
+----------
+
+* Fixed a ReDoS (regular expression denial of service) vulnerability in the
+  CSS ``expression()`` sanitizer. The pattern ``expression\s*\(.*?\)`` with
+  ``re.S`` was quadratic when input contained many ``expression(`` tokens
+  without a closing parenthesis. The body is now bounded to 1024 characters;
+  longer bodies are handled fail-closed by ``_has_sneaky_javascript()``, which
+  drops the entire style. Reported by Brian Willows.
+
+* Fixed a ReDoS vulnerability in the conditional comment detector used when
+  ``comments=False``. The pattern ``\[if\s+.*?]\s*>`` with ``re.S`` was
+  quadratic when comment text contained many ``[if`` tokens without a closing
+  ``]>``. Replaced with a linear two-pass search. Reported by Brian Willows.
+
+* Fixed a ReDoS vulnerability in the CSS comment stripper. The pattern
+  ``/\*.*?\*/`` with ``re.S`` was quadratic when style content contained many
+  ``/*`` tokens without a closing ``*/``. Replaced with a linear
+  ``str.find()``-based scan. Reachable under default configuration via
+  ``<style>`` element content.
+
+* Fixed a ReDoS vulnerability in the image data-URL scanner. The pattern
+  ``data:image/(.+?);base64,`` was quadratic when input contained many
+  ``data:image/`` tokens without a following ``;base64,``. The MIME subtype
+  body is now bounded to 255 characters. Reachable under default configuration
+  via link attributes and ``<style>`` element content.
+
 0.4.5 (2026-05-20)
 ==================
 
