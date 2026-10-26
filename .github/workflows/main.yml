@@ -28,6 +28,7 @@ jobs:
           - py312
           - py313
           - py314
+          - py315
           - mypy
 
     # Use GitHub's Linux Docker host
