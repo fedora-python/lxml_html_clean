@@ -130,6 +130,49 @@ def _comment_breaks_out_of_raw_text_ancestor(el):
         parent = parent.getparent()
     return False
 
+
+# SVG animation elements can set another attribute at runtime.  When the
+# target is a link attribute, their value attributes carry a URL that
+# rewrite_links() never sees (they are not in defs.link_attrs).
+_svg_animation_tags = frozenset(('set', 'animate', 'animatetransform'))
+_svg_animation_value_attrs = frozenset(('to', 'from', 'by', 'values'))
+
+
+def _local_name(name):
+    """'{ns}href', 'xlink:href', 'q:HREF' -> 'href'."""
+    return name.rsplit('}', 1)[-1].rsplit(':', 1)[-1].lower()
+
+
+def _remove_attrs_that_bypass_link_cleaning(doc):
+    """Remove attributes that can run script but are not link attributes.
+
+    ``srcdoc`` holds a whole HTML document rendered inside the iframe and
+    takes priority over ``src``.  ``to``/``from``/``by``/``values`` on
+    ``<set>``/``<animate>``/``<animateTransform>`` targeting ``href`` put a
+    URL on the enclosing link at runtime.  ``values`` is a ``;``-separated list, so these are
+    dropped instead of being scheme-checked.
+
+    Names are compared case-insensitively and without namespace or prefix,
+    and every match is handled, so XHTML trees with ``srcdoc`` and
+    ``SRCDOC``, or with a second ``attributename``, cannot hide one.
+    """
+    for el in doc.iter(etree.Element):
+        attrib = el.attrib
+        for aname in attrib.keys():
+            if _local_name(aname) == 'srcdoc':
+                del attrib[aname]
+        if _local_name(el.tag) not in _svg_animation_tags:
+            continue
+        animates_href = any(
+            _local_name(attrib[aname].strip()) == 'href'
+            for aname in attrib.keys()
+            if _local_name(aname) == 'attributename')
+        if animates_href:
+            for aname in attrib.keys():
+                if _local_name(aname) in _svg_animation_value_attrs:
+                    del attrib[aname]
+
+
 def _remove_css_comments(style):
     """Remove CSS /* ... */ comments in O(n) time using str.find()."""
     parts = []
@@ -432,6 +475,7 @@ class Cleaner:
                             del attrib[aname]
             doc.rewrite_links(self._remove_javascript_link,
                               resolve_base_href=False)
+            _remove_attrs_that_bypass_link_cleaning(doc)
             # If we're deleting style then we don't have to remove JS links
             # from styles, otherwise...
             if not self.inline_style:

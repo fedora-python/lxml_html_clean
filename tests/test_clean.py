@@ -236,6 +236,91 @@ class CleanerTest(unittest.TestCase):
             '<div></div>',
             Cleaner(comments=False).clean_html(html))
 
+    def test_srcdoc_removed_with_safe_attrs_only_false(self):
+        # srcdoc is a whole HTML document rendered in the frame and wins
+        # over src, so a whitelisted src does not make it safe.
+        html = ('<iframe src="https://www.youtube.com/embed/x" '
+                'srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"></iframe>')
+        cleaner = Cleaner(host_whitelist=['www.youtube.com'],
+                          safe_attrs_only=False)
+        self.assertEqual(
+            '<iframe src="https://www.youtube.com/embed/x"></iframe>',
+            cleaner.clean_html(html))
+
+    def test_srcdoc_kept_when_javascript_false(self):
+        html = '<iframe srcdoc="&lt;b&gt;x&lt;/b&gt;"></iframe>'
+        cleaner = Cleaner(javascript=False, embedded=False, frames=False,
+                          safe_attrs_only=False)
+        self.assertIn('srcdoc', cleaner.clean_html(html))
+
+    def test_svg_animation_javascript_href(self):
+        cleaner = Cleaner(safe_attrs_only=False, remove_unknown_tags=False)
+        for html in (
+            '<svg><a><set attributeName="href" to="javascript:alert(1)">'
+            '</set><text>x</text></a></svg>',
+            '<svg><a><animate attributeName="href" '
+            'values="x;javascript:alert(1)"></animate><text>x</text></a></svg>',
+            '<svg><a><animate attributeName="xlink:href" from="x" '
+            'by="javascript:alert(1)"></animate><text>x</text></a></svg>',
+            '<svg><a><set attributeName=" HREF " to="javascript:alert(1)">'
+            '</set><text>x</text></a></svg>',
+            # WebKit lets <animateTransform> target href as well.
+            '<svg><a href="#"><animateTransform attributeName="href" '
+            'type="x" from="javascript:alert(1)//" '
+            'to="javascript:alert(1)//"></animateTransform>'
+            '<text>x</text></a></svg>',
+        ):
+            out = cleaner.clean_html(html)
+            self.assertNotIn('javascript', out, html)
+
+    def test_svg_animation_all_value_attrs_removed(self):
+        html = ('<svg><a><animate attributeName="href" from="javascript:1" '
+                'to="javascript:2" by="javascript:3" values="javascript:4">'
+                '</animate><text>x</text></a></svg>')
+        cleaner = Cleaner(safe_attrs_only=False, remove_unknown_tags=False)
+        self.assertEqual(
+            '<svg><a><animate attributename="href"></animate>'
+            '<text>x</text></a></svg>',
+            cleaner.clean_html(html))
+
+    def test_svg_animation_without_attributename(self):
+        # Must not raise, with the default Cleaner (which strips
+        # attributeName first) or with safe_attrs_only=False.
+        for cleaner in (Cleaner(),
+                        Cleaner(safe_attrs_only=False,
+                                remove_unknown_tags=False)):
+            cleaner.clean_html('<svg><animate></animate></svg>')
+            cleaner.clean_html('<svg><a><animate attributeName="href" '
+                               'to="x"></animate></a></svg>')
+            cleaner.clean_html('<svg><set to="x"></set></svg>')
+
+    def test_xhtml_attribute_collisions_and_prefixes(self):
+        # XHTML trees are case- and namespace-sensitive, so several
+        # attributes can share one normalized name.
+        cleaner = Cleaner(host_whitelist=['www.youtube.com'],
+                          safe_attrs_only=False, remove_unknown_tags=False)
+        for xml in (
+            '<div><iframe src="https://www.youtube.com/embed/x" '
+            'srcdoc="MARK" SRCDOC=""/></div>',
+            '<svg xmlns="http://www.w3.org/2000/svg"><a><set '
+            'attributeName="href" attributename="width" '
+            'to="javascript:MARK"/></a></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" '
+            'xmlns:q="http://www.w3.org/1999/xlink"><a><set '
+            'attributeName="q:href" to="javascript:MARK"/></a></svg>',
+        ):
+            el = lxml.etree.fromstring(xml, lxml.html.xhtml_parser)
+            out = lxml.etree.tostring(cleaner.clean_html(el)).decode()
+            self.assertNotIn('MARK', out, xml)
+
+    def test_svg_animation_of_other_attributes_is_kept(self):
+        html = ('<svg><rect><animate attributeName="width" from="0" to="10">'
+                '</animate></rect></svg>')
+        cleaner = Cleaner(safe_attrs_only=False, remove_unknown_tags=False)
+        out = cleaner.clean_html(html)
+        self.assertIn('from="0"', out)
+        self.assertIn('to="10"', out)
+
     def test_sneaky_import_in_style(self):
         # Prevent "@@importimport" -> "@import" replacement etc.
         style_codes = [
