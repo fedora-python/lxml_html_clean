@@ -87,6 +87,49 @@ def _has_conditional_comment(text):
         return False
     return _conditional_comment_close_re.search(text, opening.end()) is not None
 
+
+# HTML elements whose content a browser parses as raw text (or escapable
+# raw text) instead of markup.  Inside them ``<!--`` is literal text and an
+# end tag such as ``</noscript>`` closes the element, so a comment that
+# libxml2 preserved inside one of these can "break out" of it and introduce
+# live markup once the cleaned output is rendered by a browser.  This is the
+# same parser differential as GHSA-5jfw-gq64-q45f (which was only addressed
+# for ``<style>`` text).
+_breakout_raw_text_elements = frozenset((
+    'noscript', 'noembed', 'noframes', 'iframe', 'xmp',
+    'title', 'textarea', 'style', 'script', 'plaintext',
+))
+
+_find_end_tag_names = re.compile(r'</([a-zA-Z][a-zA-Z0-9:_-]*)').findall
+
+
+def _comment_breaks_out_of_raw_text_ancestor(el):
+    """Return True if comment ``el`` contains an end tag that would close a
+    raw-text ancestor element when rendered by a browser.
+
+    libxml2 parses the content of elements like ``<noscript>`` as markup, so
+    ``<!--</noscript><img src=x onerror=...>-->`` becomes a single, seemingly
+    inert comment node.  A browser with scripting enabled instead treats the
+    ``<noscript>`` body as raw text, closes it at the literal ``</noscript>``
+    inside the comment and then runs the following markup.  Such comments must
+    be dropped even when comments are otherwise kept.
+    """
+    text = el.text
+    if not text or '</' not in text:
+        return False
+    end_tags = {name.lower() for name in _find_end_tag_names(text)}
+    if not end_tags:
+        return False
+    parent = el.getparent()
+    while parent is not None:
+        tag = parent.tag
+        if isinstance(tag, str):
+            tag = tag.lower()
+            if tag in _breakout_raw_text_elements and tag in end_tags:
+                return True
+        parent = parent.getparent()
+    return False
+
 def _remove_css_comments(style):
     """Remove CSS /* ... */ comments in O(n) time using str.find()."""
     parts = []
@@ -601,9 +644,16 @@ class Cleaner:
         IE conditional comments basically embed HTML that the parser
         doesn't normally see.  We can't allow anything like that, so
         we'll kill any comments that could be conditional.
+
+        We also kill comments that would "break out" of a raw-text
+        ancestor element (e.g. a ``</noscript>`` smuggled inside a comment
+        nested in ``<noscript>``), because browsers reinterpret those as
+        live markup even though libxml2 treats them as inert comments.
         """
         self._kill_elements(
-            doc, lambda el: _has_conditional_comment(el.text),
+            doc,
+            lambda el: (_has_conditional_comment(el.text)
+                        or _comment_breaks_out_of_raw_text_ancestor(el)),
             etree.Comment)
 
     def _kill_elements(self, doc, condition, iterate=None):

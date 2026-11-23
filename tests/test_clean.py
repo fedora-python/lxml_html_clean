@@ -147,6 +147,95 @@ class CleanerTest(unittest.TestCase):
             b'<noscript><style>p {{color: red;}}/* deleted */h2 {{color: blue;}}</style></noscript>',
             lxml.html.tostring(clean_html(s)))
 
+    def test_breakout_comment_in_noscript(self):
+        # libxml2 parses the <noscript> body as markup, so this is a single
+        # inert comment node.  A browser with scripting enabled treats the
+        # body as raw text, closes <noscript> at the </noscript> inside the
+        # comment and runs the <img onerror>.  The comment must be dropped
+        # even with comments=False.  Reproduces the report follow-up to
+        # GHSA-5jfw-gq64-q45f (which only covered <style> text).
+        html = ('<noscript><!--</noscript>'
+                '<img src=x onerror=alert(1)>--></noscript>')
+        cleaner = Cleaner(comments=False)
+        self.assertEqual(
+            '<noscript></noscript>',
+            cleaner.clean_html(html))
+        # The default cleaner strips all comments, so it is unaffected.
+        self.assertEqual(
+            '<noscript></noscript>',
+            Cleaner().clean_html(html))
+
+    def test_breakout_comment_in_noscript_case_insensitive(self):
+        html = ('<noscript><!--</NoScript>'
+                '<img src=x onerror=alert(1)>--></noscript>')
+        self.assertEqual(
+            '<noscript></noscript>',
+            Cleaner(comments=False).clean_html(html))
+
+    def test_breakout_comment_deeply_nested_in_noscript(self):
+        # The raw-text element only has to be an ancestor, not the direct
+        # parent, of the comment.
+        html = ('<noscript><p><span><!--</noscript>'
+                '<img src=x onerror=alert(1)>--></span></p></noscript>')
+        self.assertEqual(
+            '<noscript><p><span></span></p></noscript>',
+            Cleaner(comments=False).clean_html(html))
+
+    def test_breakout_comment_in_other_raw_text_ancestors(self):
+        # Any raw-text / escapable-raw-text ancestor is a breakout vector.
+        # Depending on libxml2's reparenting the wrapper may be dropped, but
+        # in every case the dangerous comment (and its <img onerror>) must be
+        # gone from the output.
+        cleaner = Cleaner(comments=False)
+        for tag in ("noscript", "noembed", "iframe", "xmp",
+                    "title", "textarea"):
+            html = ('<{0}><!--</{0}>'
+                    '<img src=x onerror=alert(1)>--></{0}>').format(tag)
+            out = cleaner.clean_html(html)
+            self.assertNotIn("onerror", out, tag)
+            self.assertNotIn("<!--", out, tag)
+
+    def test_benign_comment_with_math_lt_is_kept(self):
+        # A comment that merely contains '<' must not be touched.
+        html = '<div><!-- note: 1 < 2 --></div>'
+        self.assertEqual(
+            '<div><!-- note: 1 < 2 --></div>',
+            Cleaner(comments=False).clean_html(html))
+
+    def test_benign_commented_out_markup_is_kept(self):
+        # Commenting out real markup is a normal use of comments=False and
+        # must keep working for non-raw-text containers.
+        html = '<div><!-- <b>old</b> --></div>'
+        self.assertEqual(
+            '<div><!-- <b>old</b> --></div>',
+            Cleaner(comments=False).clean_html(html))
+
+    def test_benign_commented_out_end_tag_in_normal_element_is_kept(self):
+        # '</div>' inside a comment in a normal (non-raw-text) element is
+        # genuinely inert in a browser, so it must not be dropped.
+        html = '<div><!-- old: </div> leftover --></div>'
+        self.assertEqual(
+            '<div><!-- old: </div> leftover --></div>',
+            Cleaner(comments=False).clean_html(html))
+
+    def test_breakout_end_tag_outside_raw_text_ancestor_is_kept(self):
+        # A '</noscript>' smuggled in a comment that is NOT inside a
+        # <noscript> stays an inert comment in a browser (A3 in the report),
+        # so we must not over-remove it.
+        html = ('<div><!--</noscript>'
+                '<img src=x onerror=alert(1)>--></div>')
+        self.assertEqual(
+            '<div><!--</noscript><img src=x onerror=alert(1)>--></div>',
+            Cleaner(comments=False).clean_html(html))
+
+    def test_breakout_comment_still_drops_conditional_comments(self):
+        # The existing IE conditional-comment handling must keep working
+        # alongside the new breakout check.
+        html = '<div><!--[if IE]><script>alert(1)</script><![endif]--></div>'
+        self.assertEqual(
+            '<div></div>',
+            Cleaner(comments=False).clean_html(html))
+
     def test_sneaky_import_in_style(self):
         # Prevent "@@importimport" -> "@import" replacement etc.
         style_codes = [

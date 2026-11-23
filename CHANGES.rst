@@ -3,6 +3,30 @@ lxml_html_clean changelog
 =========================
 
 
+0.4.7 (2026-11-23)
+==================
+
+Bugs fixed
+----------
+
+* Fixed an XSS vulnerability when ``comments=False`` was used to keep
+  comments. libxml2 parses the content of raw-text elements such as
+  ``<noscript>`` as markup, so a payload like
+  ``<noscript><!--</noscript><img src=x onerror=alert(1)>--></noscript>``
+  was preserved as a single, seemingly inert comment node. A browser with
+  scripting enabled instead treats the ``<noscript>`` body as raw text,
+  closes it at the ``</noscript>`` inside the comment and runs the following
+  markup, executing the ``onerror`` handler without any user interaction.
+  Comments are now dropped when they contain an end tag that would close a
+  raw-text ancestor element (``noscript``, ``noembed``, ``noframes``,
+  ``iframe``, ``xmp``, ``title``, ``textarea``, ``style``, ``script``,
+  ``plaintext``). This is the same class of parser differential as
+  GHSA-5jfw-gq64-q45f, which had only been addressed for ``<style>`` text.
+  The default ``Cleaner()`` removes all comments and was never affected.
+  Benign comments, including commented-out markup inside ordinary elements,
+  are kept.
+
+
 0.4.6 (2026-10-26)
 ==================
 
