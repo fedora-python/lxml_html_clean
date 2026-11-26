@@ -81,7 +81,7 @@ Bugs fixed
   attributes were not sanitized when``safe_attrs_only=False``, allowing
   cross-site scripting (XSS) attacks. The fix requires ``lxml>=6.1.1``,
   which adds ``xlink:href`` to the set of link attributes iterated by
-  ``rewrite_links()``. Reported by Guillem Lefait (@glefait).
+  ``rewrite_links()``. Reported by Guillem Lefait (@glefait). (CVE-2026-49825)
 
 0.4.4 (2026-02-26)
 ==================
