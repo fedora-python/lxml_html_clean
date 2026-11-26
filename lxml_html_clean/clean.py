@@ -144,17 +144,27 @@ def _local_name(name):
 
 
 def _remove_attrs_that_bypass_link_cleaning(doc):
-    """Remove attributes that can run script but are not link attributes.
+    """Remove script-bearing attributes that ``rewrite_links`` cannot clean.
 
-    ``srcdoc`` holds a whole HTML document rendered inside the iframe and
-    takes priority over ``src``.  ``to``/``from``/``by``/``values`` on
-    ``<set>``/``<animate>``/``<animateTransform>`` targeting ``href`` put a
-    URL on the enclosing link at runtime.  ``values`` is a ``;``-separated list, so these are
-    dropped instead of being scheme-checked.
+    ``rewrite_links`` only visits attributes listed in
+    ``lxml.html.defs.link_attrs``, so these two script vectors would
+    otherwise survive ``safe_attrs_only=False``:
 
-    Names are compared case-insensitively and without namespace or prefix,
-    and every match is handled, so XHTML trees with ``srcdoc`` and
-    ``SRCDOC``, or with a second ``attributename``, cannot hide one.
+    * ``srcdoc`` on ``<iframe>`` holds a whole HTML document that the browser
+      renders inside the frame, and it takes priority over ``src`` -- so a
+      whitelisted ``src`` does not make it safe. It is removed from every
+      element.
+    * ``to``/``from``/``by``/``values`` on ``<set>``/``<animate>``/
+      ``<animateTransform>`` whose ``attributeName`` is ``href`` (or
+      ``xlink:href``) set a URL on the enclosing SVG ``<a>`` at runtime.
+      They are dropped rather than scheme-checked because ``values`` is a
+      ``;``-separated list, so a check on the whole string would miss
+      individual items.
+
+    Attribute and tag names are matched case-insensitively and without any
+    namespace or prefix, and every match on an element is handled. XHTML
+    trees distinguish ``srcdoc`` from ``SRCDOC`` and may carry a second
+    ``attributeName``; neither can hide a dangerous attribute.
     """
     for el in doc.iter(etree.Element):
         attrib = el.attrib
