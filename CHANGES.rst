@@ -3,11 +3,25 @@ lxml_html_clean changelog
 =========================
 
 
-0.4.7 (2026-11-23)
+0.4.7 (2026-11-26)
 ==================
 
 Bugs fixed
 ----------
+
+* Fixed an XSS vulnerability when ``safe_attrs_only=False`` was used. With
+  ``javascript=True`` (the default) the cleaner only scrubs script from the
+  attributes listed in ``lxml.html.defs.link_attrs``, so two kinds of
+  script-bearing attributes slipped through. ``srcdoc`` on ``<iframe>`` holds
+  a whole HTML document that the browser renders (and that takes priority
+  over a whitelisted ``src``), giving no-interaction XSS when an iframe is
+  kept via ``host_whitelist``. ``to``/``from``/``by``/``values`` on the SVG
+  animation elements ``<set>``/``<animate>``/``<animateTransform>`` with
+  ``attributeName="href"`` set a ``javascript:`` URL on the enclosing SVG
+  ``<a>`` at runtime (also requires ``remove_unknown_tags=False`` and a
+  click). Both are now removed when ``javascript=True``. This is the same
+  class of incomplete-blocklist issue as GHSA-4jhm-jv67-739f. The default
+  ``Cleaner()`` uses ``safe_attrs_only=True`` and was never affected.
 
 * Fixed an XSS vulnerability when ``comments=False`` was used to keep
   comments. libxml2 parses the content of raw-text elements such as
